@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="stylecadastro.css">
+    <title>Cadastros e Consultas</title>
+</head>
+<body>
+
+    <div class="navbar">
+        <a href="pedidos.html">Pedidos</a>
+        <a href="cadastros.html">Cadastros</a>
+        <a href="relatorios.html">Relatórios</a>
+    </div>
+
+    <h1>Cadastros e Consultas</h1>
+    
+    <h2>Cadastro de Produtos</h2>
+
+    <div class="formProduto">
+    <form id="formProduto">
+
+        <label for="nomeProduto">Nome do Produto:</label>
+        <input type="text" id="nomeProduto" name="nomeProduto" required>
+
+        <label for="precoProduto">Preço do Produto:</label>
+        <input type="number" id="precoProduto" name="precoProduto" min="0" step="0.01" required>
+
+        <button type="submit">Cadastrar</button>
+    </form>
+    </div>
+
+    <h2>Produtos Cadastrados</h2>
+
+    <div class="formBuscarProduto">
+    <form id="formBuscarProduto">
+        <label for="buscarProduto">Nome do Produto:</label>
+        <input type="text" id="buscarProduto" name="buscarProduto">
+        <button type="submit">Buscar</button>
+    </form>
+
+    <table id="tabelaProdutos">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Preço</th>
+            </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+    </table>
+
+    <form id="formExcluirProduto">
+    <label for="excluirProduto">Excluir Produto: </label>
+    <input type="number" id="excluirProduto" name="excluirProduto" placeholder="ID do Produto">
+    <button type="submit" id="botaoExcluirProduto">Excluir</button>
+    </form>
+    </div>  
+
+    <h2>Cadastro de Clientes</h2>
+
+    <div class="formCliente">
+    <form id="formCliente">
+        <label for="nomeCliente">Nome: </label>
+        <input type="text" name="nomeCliente" id="nomeCliente" required>
+
+        <label for="cpfCliente">CPF: </label>
+        <input type="text" name="cpfCliente" id="cpfCliente" required>
+
+        <label for="telefoneCliente">Telefone: </label>
+        <input type="text" name="telefoneCliente" id="telefoneCliente" required>
+
+        <label for="bairroCliente">Bairro :</label>
+        <input type="text" name="bairroCliente" id="bairroCliente" required>
+
+        <label for="ruaCliente">Rua: </label>
+        <input type="text" name="ruaCliente" id="ruaCliente" required>
+
+        <label for="numeroCasaCliente">N°: </label>
+        <input type="text" name="numeroCasaCliente" id="numeroCasaCliente" required>
+
+        <button type="submit">Cadastrar</button>
+    </form>
+    </div>
+
+    <h2>Clientes Cadastrados</h2>
+
+    <div class="formBuscarCliente">
+    <form id="formBuscarCliente">
+        <label for="buscarCliente">Nome do Cliente:</label>
+        <input type="text" id="buscarCliente" name="buscarCliente">
+        <button type="submit">Buscar</button>
+    </form>
+
+    <div class="tabelaResponsiva">
+    <table id="tabelaClientes">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Telefone</th>
+                <th>Bairro</th>
+                <th>Rua</th>
+                <th>N°</th>
+            </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+    </table>
+    </div>
+
+    <form id="formExcluirCliente">
+    <label for="excluirCliente">Excluir Cliente: </label>
+    <input type="number" id="excluirCliente" name="excluirCliente" placeholder="ID do Cliente">
+    <button type="submit" id="botaoExcluirCliente">Excluir</button>
+    </form>
+    </div>
+
+    <script> // SCRIPT PARA EXIBIR OS PRODUTOS CADASTRADOS -- FUNCIONANDO
+
+        async function obterProdutos() {
+            try {
+                // Obtém o token do cookie
+                const token = document.cookie.split('; ').find(row => row.startsWith('token')).split('=')[1];
+                const response = await fetch('http://localhost:3000/produtos', {
+                headers: {
+                    'x-acess-token': token
+                }
+            });
+
+                const data = await response.json();
+                
+                // Limpar o conteúdo atual da tabela
+                const tabelaProdutos = document.getElementById('tabelaProdutos');
+                tabelaProdutos.innerHTML = '';
+    
+                // Adicionar o cabeçalho da tabela
+                const thead = tabelaProdutos.createTHead();
+                const row = thead.insertRow();
+                const cellId = row.insertCell(0)
+                const cellNome = row.insertCell(1);
+                const cellPreco = row.insertCell(2);
+                cellId.textContent = 'ID'
+                cellNome.textContent = 'Nome';
+                cellPreco.textContent = 'Preço';
+                
+                // Adicionar cada produto à tabela
+                data.forEach(produto => {
+                    const row = tabelaProdutos.insertRow();
+                    const cellId = row.insertCell(0)
+                    const cellNome = row.insertCell(1);
+                    const cellPreco = row.insertCell(2);
+                    cellId.textContent = produto.id_produto;
+                    cellNome.textContent = produto.nome_produto;
+                    cellPreco.textContent = `R$${produto.preco_produto.toFixed(2)}`;
+                });
+            } catch (error) {
+                console.error('Erro ao obter produtos:', error);
+            }
+        }
+    
+    // Chamar a função para obter os Clientes quando a página é carregada
+    window.addEventListener('load', obterProdutos);
+    
+    </script>
+    
+    <script> // SCRIPT PARA EXCLUIR UM PRODUTO BASEADO NO ID -- FUNCIONANDO
+    
+        document.addEventListener('DOMContentLoaded', () => {
+            const botaoExcluirProduto = document.getElementById('botaoExcluirProduto');
+    
+            botaoExcluirProduto.addEventListener('click', async (event) => {
+                event.preventDefault();
+    
+                // Obter o ID do produto a ser excluído
+                const idProduto = document.getElementById('excluirProduto').value;
+
+                // Obtém o token do cookie
+                const token = document.cookie.split('; ').find(row => row.startsWith('token')).split('=')[1];
+                // Exibir um alerta solicitando a confirmação do cliente
+                const confirmacao = window.confirm('Tem certeza que deseja excluir este produto?');
+    
+                // Se o cliente confirmar a exclusão
+                if (confirmacao) {
+                    try {
+                        const response = await fetch(`http://localhost:3000/produtos/${idProduto}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'x-acess-token': token
+                            }
+                        });
+    
+                        if (response.ok) {
+                            alert('Produto excluído com sucesso!');
+                            // Limpar o input de excluir por ID
+                            document.getElementById('formExcluirProduto').reset();
+                            // Atualizar a lista de produtos após a exclusão
+                            obterProdutos();
+                        } else {
+                            console.error('Erro ao excluir o produto.');
+                        }
+                    } catch (error) {
+                        console.error('Erro ao excluir o produto:', error);
+                    }
+                }
+            });
+        });
+    </script>
+
+    <script> // SCRIPT PARA BUSCAR UM PRODUTO PELO NOME
+
+    document.addEventListener('DOMContentLoaded', () => {
+            const inputBuscarProduto = document.getElementById('buscarProduto');
+            // Adiciona um ouvinte de eventos para o evento 'input' no campo de busca
+            inputBuscarProduto.addEventListener('input', () => {
+                // Verifica se o campo de busca está vazio
+                if (inputBuscarProduto.value === '') {
+                    // Chama a função obterProdutos para mostrar todos os produtos
+                    obterProdutos();
+                }
+            });
+            // Obtenha a referência para a tabela de produtos
+            const tabelaProdutos = document.getElementById('tabelaProdutos');
+
+            // Adicione um ouvinte para o formulário de busca de produtos
+            const formBuscarProduto = document.getElementById('formBuscarProduto');
+            formBuscarProduto.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const nomeProduto = document.getElementById('buscarProduto').value;
+
+                try {
+                    // Obtém o token do cookie
+                    const token = document.cookie.split('; ').find(row => row.startsWith('token')).split('=')[1];
+                    const response = await fetch(`http://localhost:3000/buscar-produto?nome=${nomeProduto}`, {
+                        headers: {
+                            'x-acess-token': token
+                        }
+                    });
+                        
+                    if (response.ok) {
+                        const produtosEncontrado = await response.json();
+                        adicionarProdutoATabela(produtosEncontrado);
+                    } else {
+                        alert('Produto não encontrado.');
+                    }
+                } catch (error) {
+                    console.error('Erro ao buscar o produto:', error);
+                }
+            });
+        });
+
+        function adicionarProdutoATabela(produtos) {
+
+        const tabelaProdutos = document.getElementById('tabelaProdutos');
+        tabelaProdutos.innerHTML = '';
+
+        // Adicionar o cabeçalho da tabela
+        const thead = tabelaProdutos.createTHead();
+                const row = thead.insertRow();
+                const cellId = row.insertCell(0)
+                const cellNome = row.insertCell(1);
+                const cellPreco = row.insertCell(2);
+                cellId.textContent = 'ID'
+                cellNome.textContent = 'Nome';
+                cellPreco.textContent = 'Preço';
+                // Adiciona cada produto encontrado à tabela
+        produtos.forEach(produto => {
+        // Cria uma nova linha na tabela e adiciona os dados do produto
+        const newRow = tabelaProdutos.insertRow();
+        newRow.innerHTML = `<td>${produto.id_produto}</td>
+                            <td>${produto.nome_produto}</td>
+                            <td>R$${produto.preco_produto.toFixed(2)}</td>`;
+    });
+    }
+
+    </script>
+
+    <script> //SCRIPT PARA EXCLUIR UM CLIENTE PELO ID -- FUNCIONANDO
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const botaoExcluirCliente = document.getElementById('botaoExcluirCliente');
+
+        botaoExcluirCliente.addEventListener('click', async (event) => {
+            event.preventDefault();
+
+            // Obter o ID do cliente a ser excluído
+            const idCliente = document.getElementById('excluirCliente').value;
+
+            // Exibir um alerta solicitando a confirmação do cliente
+            const confirmacao = window.confirm('Tem certeza que deseja excluir este cliente?');
+
+            // Se o cliente confirmar a exclusão
+            if (confirmacao) {
+                try {
+                    const token = document.cookie.split('; ').find(row => row.startsWith('token')).split('=')[1];
+                    const response = await fetch(`http://localhost:3000/clientes/${idCliente}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'x-acess-token': token
+                        }
+                    });
+
+                    if (response.ok) {
+                        alert('Cliente excluído com sucesso!');
+                        // Limpar o input de excluir por ID
+                        document.getElementById('formExcluirCliente').reset();
+                        // Atualizar a lista de clientes após a exclusão
+                        obterClientes();
+                    } else {
+                        console.error('Erro ao excluir o cliente.');
+                    }
+                } catch (error) {
+                    console.error('Erro ao excluir o cliente:', error);
+                }
+            }
+        });
+    });
+
+    </script>
+
+    <script> // FUNÇÃO PARA OBTER A LISTA DE CLIENTES CADASTRADOS -- FUNCIONANDO
+
+        async function obterClientes() {
+            try {
+                const token = document.cookie.split('; ').find(row => row.startsWith('token')).split('=')[1];
+                const response = await fetch('http://localhost:3000/clientes', {
+                    headers: {
+                        'x-acess-token': token
+                    }
+                });
+                const data = await response.json();
+                
+                // Limpar o conteúdo atual da tabela
+                const tabelaClientes = document.getElementById('tabelaClientes');
+                tabelaClientes.innerHTML = '';
+
+                // Adicionar o cabeçalho da tabela
+                const thead = tabelaClientes.createTHead();
+                const row = thead.insertRow();
+                const cellId = row.insertCell(0)
+                const cellNome = row.insertCell(1);
+                const cellCpf = row.insertCell(2)
+                const cellTelefone = row.insertCell(3);
+                const cellBairro = row.insertCell(4);
+                const cellRua = row.insertCell(5);
+                const cellNumero = row.insertCell(6);
+                cellId.textContent = 'ID'
+                cellNome.textContent = 'Nome';
+                cellCpf.textContent = 'CPF';
+                cellTelefone.textContent = 'Telefone';
+                cellBairro.textContent = 'Bairro'
+                cellRua.textContent = 'Rua'
+                cellNumero.textContent = 'Numero'
+                
+                
+                // Adicionar cada cliente à tabela
+                data.forEach(cliente => {
+                    const row = tabelaClientes.insertRow();
+                    const cellId = row.insertCell(0)
+                    const cellNome = row.insertCell(1);
+                    const cellCpf = row.insertCell(2);
+                    const cellTelefone = row.insertCell(3);
+                    const cellBairro = row.insertCell(4);
+                    const cellRua = row.insertCell(5);
+                    const cellNumero = row.insertCell(6);
+                    cellId.textContent = cliente.id_cliente;
+                    cellNome.textContent = cliente.nome;
+                    cellCpf.textContent = cliente.cpf;
+                    cellTelefone.textContent = cliente.telefone;
+                    cellBairro.textContent = cliente.bairro;
+                    cellRua.textContent = cliente.rua;
+                    cellNumero.textContent = cliente.numero;
+                });
+            } catch (error) {
+                console.error('Erro ao obter clientes:', error);
+            }
+        }
+
+        // Chamar a função para obter os Clientes quando a página é carregada
+        window.addEventListener('load', obterClientes);
+
+    </script>
+
+    <script> // FUNÇÃO PARA BUSCAR UM CLIENTE PELO NOME
+    document.addEventListener('DOMContentLoaded', () => {
+        const inputBuscarCliente = document.getElementById('buscarCliente');
+        // Adiciona um ouvinte de eventos para o evento 'input' no campo de busca
+        inputBuscarCliente.addEventListener('input', () => {
+            // Verifica se o campo de busca está vazio
+            if (inputBuscarCliente.value === '') {
+                // Chama a função obterClientes para mostrar todos os clientes
+                obterClientes();
+            }
+        });
+        // Obtenha a referência para a tabela de clientes
+        const tabelaClientes = document.getElementById('tabelaClientes');
+
+        // Adicione um ouvinte para o formulário de busca de cliente
+        const formBuscarCliente = document.getElementById('formBuscarCliente');
+        formBuscarCliente.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const nomeCliente = document.getElementById('buscarCliente').value;
+
+            try {
+                const token = document.cookie.split('; ').find(row => row.startsWith('token')).split('=')[1];
+                const response = await fetch(`http://localhost:3000/buscar-cliente?nome=${nomeCliente}`, {
+                    headers: {
+                        'x-acess-token': token
+                    }
+                });
+                if (response.ok) {
+                    const clientesEncontrado = await response.json();
+                    adicionarClienteATabela(clientesEncontrado);
+                } else {
+                    alert('Cliente não encontrado!');
+                }
+            } catch (error) {
+                console.error('Erro ao buscar o cliente:', error);
+            }
+        });
+    });
+
+    function adicionarClienteATabela(clientes) {
+
+    const tabelaClientes = document.getElementById('tabelaClientes');
+    tabelaClientes.innerHTML = '';
+
+    // Adicionar o cabeçalho da tabela
+    const thead = tabelaClientes.createTHead();
+            const row = thead.insertRow();
+            const cellId = row.insertCell(0)
+            const cellNome = row.insertCell(1);
+            const cellCpf = row.insertCell(2)
+            const cellTelefone = row.insertCell(3);
+            const cellBairro = row.insertCell(4);
+            const cellRua = row.insertCell(5);
+            const cellNumero = row.insertCell(6);
+            cellId.textContent = 'ID'
+            cellNome.textContent = 'Nome';
+            cellCpf.textContent = 'CPF';
+            cellTelefone.textContent = 'Telefone';
+            cellBairro.textContent = 'Bairro'
+            cellRua.textContent = 'Rua'
+            cellNumero.textContent = 'Numero'
+
+    // Crie uma nova linha na tabela e adicione os dados do cliente
+    clientes.forEach(cliente => {
+        // Cria uma nova linha na tabela e adiciona os dados do cliente
+        const newRow = tabelaClientes.insertRow();
+        newRow.innerHTML = `<td>${cliente.id_cliente}</td>
+                            <td>${cliente.nome}</td>
+                            <td>${cliente.cpf}</td>
+                            <td>${cliente.telefone}</td>
+                            <td>${cliente.bairro}</td>
+                            <td>${cliente.rua}</td>
+                            <td>${cliente.numero}</td>`;
+    });
+}
+    </script>
+
+    <script> // FUNÇÃO DE CADASTRO DOS DOIS FORMULÁRIOS -- FUNCIONANDO
+
+    async function enviarDadosParaBackend(url, data) {
+        try {
+            const token = document.cookie.split('; ').find(row => row.startsWith('token')).split('=')[1];
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-acess-token': token
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                alert('Cadastro realizado com sucesso!');
+                document.getElementById('formProduto').reset();
+                document.getElementById('formCliente').reset();
+                obterProdutos();
+                obterClientes();
+            } else {
+                alert('Erro ao enviar os dados:', response.statusText);
+            }
+        } catch (error) {
+            alert('Erro ao enviar os dados:', error);
+        }
+    }
+
+    const formProduto = document.getElementById('formProduto');
+    const formCliente = document.getElementById('formCliente');
+
+    formProduto.addEventListener('submit', event => {
+        event.preventDefault();
+        const formProdutoData = new FormData(formProduto);
+        const data = {};
+        formProdutoData.forEach((value, key) => {
+            data[key] = value;
+        });
+
+        enviarDadosParaBackend('http://localhost:3000/formulario-produto', data);
+    });
+
+    formCliente.addEventListener('submit', event => {
+        event.preventDefault();
+        const formClienteData = new FormData(formCliente);
+        const data = {};
+        formClienteData.forEach((value, key) => {
+            data[key] = value;
+        });
+
+        enviarDadosParaBackend('http://localhost:3000/formulario-cliente', data);
+    });
+     
+    </script>
+
+    <script> // SCRIPT DO TOKEN
+
+    function verificarTokenCookie() {
+        const tokenCookie = document.cookie.split('; ').find(row => row.startsWith('token'));
+
+        if (!tokenCookie) {
+            window.location.href = '/index.html'; // Substitua 'index.html' pelo caminho correto da sua página de login
+        }
+    }
+
+    verificarTokenCookie(); // Chama a função imediatamente ao carregar a página
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,160 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #cccccc; /* Um cinza um pouco mais escuro */
+    color: #333333; /* Letras pretas */
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #dddddd; /* Cinza claro para o fundo da barra de navegação */
+    border-bottom: 1px solid #999999; /* Bordas levemente mais escuras */
+}
+
+.navbar a {
+    text-decoration: none;
+    text-align: center;
+    color: #555555; /* Um cinza um pouco mais escuro */
+    padding: 5px 10px; /* Adicionei padding para espaçamento interno */
+    border-radius: 5px;
+    border: 2px solid #999999; /* Bordas levemente mais escuras */
+    flex-grow: 1;
+}
+
+.navbar a + a {
+    margin-left: 10px; /* Adicionei um espaço de 10px entre os botões */
+}
+
+.navbar a:hover {
+    background-color: #cccccc; /* Cinza claro para o fundo do botão ao passar o mouse */
+}
+
+h1 {
+    font-size: 28px;
+    text-align: center;
+    margin: 10px 0;
+}
+
+#sugestoesClientes,
+#sugestoesProdutos {
+    position: absolute;
+    background-color: #f2f2f2; /* Cinza claro para o fundo */
+    border-radius: 5px;
+    overflow-y: auto;
+    max-height: 150px; 
+    width: 80%;
+    z-index: 1;
+}
+
+#sugestoesClientes > div,
+#sugestoesProdutos > div {
+    border-bottom: 2px solid #cccccc; /* Bordas levemente mais escuras */
+    padding: 5px 5px;
+}
+
+form#formPedido {
+    border: 1px solid #999999; /* Bordas levemente mais escuras */
+    border-radius: 5px;
+    padding: 0 20px 20px 20px;
+    width: 80%;
+    margin: 0 auto; /* Centralizei o formulário */
+    text-align: center;
+    background-color: #dddddd; /* Cinza claro para o fundo do formulário */
+}
+
+form#formPedido label {
+    display: block;
+    margin-top: 15px;
+}
+
+form#formPedido input[type="text"],
+form#formPedido input[type="number"],
+form#formPedido input[type="datetime-local"] {
+    width: calc(100% - 20px);
+    padding: 5px;
+    margin-top: 5px;
+    background-color: #f2f2f2; /* Cinza claro para o fundo do input */
+    color: #333333; /* Letras pretas */
+    border: 1px solid #999999; /* Bordas levemente mais escuras */
+    border-radius: 5px;
+}
+
+form#formPedido input[type="text"]:read-only {
+    background-color: #f2f2f2; /* Cinza claro para o fundo do input */
+}
+
+form#formPedido button {
+    width: calc(80%);
+    max-width: 200px;
+    padding: 8px;
+    margin-top: 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    display: block; /* Faz o botão se comportar como um bloco para poder aplicar margin: auto */
+    margin-left: auto; /* Centraliza horizontalmente */
+    margin-right: auto; /* Centraliza horizontalmente */
+}
+
+form#formPedido button:hover {
+    background-color: #0056b3;
+}
+
+form#formPedido button#adicionar {
+    background-color: #28a745;
+}
+
+form#formPedido button#adicionar:hover {
+    background-color: #218838;
+}
+
+table#tabelaProdutos {
+    width: 100%;
+    max-width: 400px;
+    border-collapse: collapse;
+    margin-top: 20px;
+    margin-left: auto; /* Centraliza a tabela horizontalmente */
+    margin-right: auto; /* Centraliza a tabela horizontalmente */
+}
+
+table#tabelaProdutos th,
+table#tabelaProdutos td {
+    border: 1px solid #999999; /* Bordas levemente mais escuras */
+    padding: 8px;
+    text-align: left;
+    background-color: #f2f2f2; /* Cinza claro para o fundo da tabela */
+    color: #333333; /* Letras pretas */
+}
+
+table#tabelaProdutos th {
+    background-color: #dddddd; /* Cinza claro um pouco mais escuro para cabeçalhos da tabela */
+}
+
+
+@media (min-width: 481px) {
+    
+    form input[type="text"],
+    form input[type="number"],
+    form input[type="datetime-local"] {
+        max-width: 400px;
+        padding: 5px;
+        margin-top: 5px;
+    }
+
+    #sugestoesClientes,
+    #sugestoesProdutos {
+        position: absolute;
+        max-width: 410px;
+        left: 0; /* Posiciona a sugestão no canto esquerdo */
+        right: 0; /* Posiciona a sugestão no canto direito */
+        margin-left: auto; /* Centraliza horizontalmente */
+        margin-right: auto; /* Centraliza horizontalmente */
+        z-index: 1;
+        display: block;
+    }
+}

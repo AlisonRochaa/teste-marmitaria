@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="stylelogin.css">
+    <title>Login</title>
+</head>
+<body>
+
+    <div>
+    <h2>Login</h2>
+    <form id="loginForm">
+        <label for="username">Usuário:</label>
+        <input type="text" id="username" name="username" required>
+    
+        <label for="password">Senha:</label>
+        <input type="password" id="password" name="password" required>
+    
+        <button type="submit">Entrar</button>
+    </form>
+    </div>
+    
+    <script> // SCRIPT DO LOGIN
+        document.getElementById('loginForm').addEventListener('submit', async function(event) {
+        event.preventDefault(); // Impede o envio do formulário padrão
+
+        const formData = {
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value
+        };
+
+        try {
+            const response = await fetch('http://localhost:3000/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                const responseData = await response.json(); // Extrai o corpo da resposta JSON
+                const token = responseData.token;
+                // Define o tempo de vida do cookie (por exemplo, 2 hora a partir do momento atual)
+                const expirationTime = new Date();
+                expirationTime.setHours(expirationTime.getHours() + 2); // Adiciona 2 hora
+                document.cookie = `token=${token}; expires=${expirationTime.toUTCString()}; path=/`;
+                window.location.href = '/pedidos.html'; // Redireciona para a página de cadastro de pedidos
+            } else {
+                // Se a resposta não for bem-sucedida, exiba uma mensagem de erro
+                alert('Credenciais incorretas. Tente novamente.');
+            }
+        } catch (error) {
+            console.error('Erro ao fazer a solicitação:', error);
+            alert('Erro ao fazer a solicitação. Tente novamente.');
+        }
+    });
+    </script>
+
+</body>
+</html>

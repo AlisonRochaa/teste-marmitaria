@@ -1,0 +1,230 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #cccccc; /* Um cinza um pouco mais escuro */
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #dddddd; /* Cinza claro para o fundo da barra de navegação */
+    border-bottom: 1px solid #999999; /* Bordas levemente mais escuras */
+}
+
+.navbar a {
+    text-decoration: none;
+    text-align: center;
+    color: #555555; /* Um cinza um pouco mais escuro */
+    padding: 5px 10px; /* Adicionei padding para espaçamento interno */
+    border-radius: 5px;
+    border: 2px solid #999999; /* Bordas levemente mais escuras */
+    flex-grow: 1;
+}
+
+.navbar a + a {
+    margin-left: 10px; /* Adicionei um espaço de 10px entre os botões */
+}
+
+.navbar a:hover {
+    background-color: #cccccc; /* Cinza claro para o fundo do botão ao passar o mouse */
+}
+
+h1 {
+    font-size: 28px;
+    text-align: center;
+    margin: 20px 0;
+}
+
+h2 {
+    font-size: 20px;
+    text-align: center;
+    margin: 30px 10px 10px 10px;
+}
+
+#sugestoesClientes {
+    position: absolute;
+    background-color: #ffffff; /* Branco para o fundo das sugestões */
+    border-radius: 5px;
+    overflow-y: auto; 
+    width: 78%;
+    z-index: 1;
+}
+
+#sugestoesClientes > div {
+    border-bottom: 2px solid #999999; /* Bordas levemente mais escuras */
+    padding: 5px 5px;
+}
+
+/* Estilos para as divs dos formulários */
+.historicoPedidos {
+    border: 1px solid #999999; /* Bordas levemente mais escuras */
+    border-radius: 5px; /* Adiciona bordas arredondadas */
+    padding: 0px 20px 20px 20px; /* Adiciona espaço interno */
+    margin: 0 auto;
+    width: 80%;
+    text-align: center;
+    background-color: #dddddd; /* Cinza claro para o fundo */
+}
+
+/* Estilos para os formulários dentro das divs */
+form label {
+    display: block;
+    margin-top: 15px;
+}
+
+form input[type="text"],
+form input[type="number"],
+form input[type="date"] {
+    width: calc(100% - 20px);
+    padding: 5px;
+    margin-top: 5px;
+    background-color: #f2f2f2; /* Cinza claro para o fundo do input */
+    color: #333333; /* Letras pretas */
+    border: 1px solid #999999; /* Bordas levemente mais escuras */
+    border-radius: 5px;
+}
+
+form button[type="submit"] {
+    width: calc(80%);
+    max-width: 200px;
+    padding: 8px;
+    margin-top: 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    display: block; /* Faz o botão se comportar como um bloco para poder aplicar margin: auto */
+    margin-left: auto; /* Centraliza horizontalmente */
+    margin-right: auto; /* Centraliza horizontalmente */
+}
+
+form button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+table th,
+table td {
+    border: 1px solid #999999; /* Bordas levemente mais escuras */
+    padding: 8px;
+    text-align: center;
+}
+
+.thProdutos {
+    min-width: 250px;
+}
+
+.thClientes {
+    min-width: 200px;
+}
+
+.thValorTotal {
+    min-width: 100px;
+}
+
+.thNome,
+.thRua,
+.thBairro {
+    min-width: 200px;
+}
+
+.thCpf,
+.thTelefone {
+    min-width: 120px;
+}
+
+.thNumero {
+    min-width: 50px;
+}
+
+table th {
+    background-color: #dddddd; /* Cinza claro um pouco mais escuro para cabeçalhos da tabela */
+}
+
+.tabelaResponsivaPedidos {
+    overflow-x: auto;
+    max-width: 100%; /* Define a largura máxima da div para garantir que o scroll horizontal apareça quando necessário */
+}
+
+.tabelaResponsivaCliente {
+    overflow-x: auto;
+    max-width: 100%; /* Define a largura máxima da div para garantir que o scroll horizontal apareça quando necessário */
+}
+
+#tabelaPedidos {
+    /* Estilos da tabela */
+    width: 100%; /* A tabela ocupa toda a largura da div de rolagem */
+    /* Outros estilos conforme necessário */
+}
+
+#formExcluirPedido {
+    margin-top: 20px;
+}
+
+#botaoExcluirPedido {
+    background-color: #dc3545;
+}
+
+#botaoExcluirPedido:hover {
+    background-color: #c82333;
+}
+
+#botaoGerarPDF,
+#alterarStatus {
+    width: calc(80%);
+    max-width: 200px;
+    padding: 8px;
+    margin-top: 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    display: block; /* Faz o botão se comportar como um bloco para poder aplicar margin: auto */
+    margin-left: auto; /* Centraliza horizontalmente */
+    margin-right: auto; /* Centraliza horizontalmente */
+}
+
+#alterarStatus:hover {
+    background-color: #0056b3;
+}
+
+#botaoGerarPDF {
+    background-color: #28a745;
+}
+
+#botaoGerarPDF:hover {
+    background-color: #218838; 
+}
+
+#buscar {
+    background-color: #17a2b8
+}
+
+#buscar:hover {
+    background-color: #138496;
+}
+
+@media (min-width: 481px) {
+    
+    form input[type="text"],
+    form input[type="number"],
+    form input[type="date"] {
+    max-width: 400px;
+    padding: 5px;
+    margin-top: 5px;
+}
+
+.historicoPedidos {
+    max-width: 1000px;
+}
+
+}

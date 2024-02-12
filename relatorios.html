@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="stylerelatorios.css">
+    <title>Histórico de Pedidos</title>
+</head>
+<body>
+
+    <div class="navbar">
+        <a href="pedidos.html">Pedidos</a>
+        <a href="cadastros.html">Cadastros</a>
+        <a href="relatorios.html">Relatórios</a>
+    </div>
+
+    <h1>Histórico de Pedidos</h1>
+
+    <div class="historicoPedidos">
+    <form id="formFiltro">
+        <label for="filtroNome">Nome do Cliente:</label>
+        <input type="text" id="filtroNome" name="filtroNome" autocomplete="off">
+        <div id="sugestoesClientes"></div>
+        
+        <label for="dataInicial">Data Inicial:</label>
+        <input type="date" id="dataInicial" name="dataInicial">
+        
+        <label for="dataFinal">Data Final:</label>
+        <input type="date" id="dataFinal" name="dataFinal">
+        
+        <button type="submit" id="buscar">Buscar</button>
+    </form>
+
+    <div class="tabelaResponsivaCliente">
+    <table id="dadosCliente">
+        <thead>
+            <tr>
+                <th class="thNome">Nome</th>
+                <th class="thCpf">CPF</th>
+                <th class="thTelefone">Telefone</th>
+                <th class="thBairro">Bairro</th>
+                <th class="thRua">Rua</th>
+                <th class="thNumero">N°</th>
+            </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+    </table>
+    </div>
+    
+    <div class="tabelaResponsivaPedidos">
+    <table id="tabelaPedidos">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th class="thClientes">Cliente</th>
+                <th class="thProdutos">Produtos</th>
+                <th class="thValorTotal">Valor Total</th>
+                <th>Data</th>
+                <th>Hora</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+    </table>
+    </div>
+
+    <form id="formExcluirPedido">
+        <label for="excluirPedido">Excluir Pedido: </label>
+        <input type="number" id="excluirPedido" name="excluirPedido" placeholder="ID do Pedido">
+        <button type="submit" id="botaoExcluirPedido">Excluir</button>
+    </form>
+    
+    <button id="botaoGerarPDF">Gerar Relatório</button>
+    <button id="alterarStatus">Alterar Status</button>
+    </div>
+
+    <script> //SCRIPT PARA ENVIAR DADOS DA TABELA E GERAR PDF
+
+    document.getElementById('botaoGerarPDF').addEventListener('click', async () => {
+
+        // Obter data inicial e final do relatório
+        const datasRelatorio = {
+        dataInicial: document.getElementById('dataInicial').value,
+        dataFinal: document.getElementById('dataFinal').value
+        };
+
+        // Obter os dados do cliente da tabela
+        const dadosCliente = {
+            nome: document.getElementById('dadosCliente').rows[1].cells[0].textContent,
+            cpf: document.getElementById('dadosCliente').rows[1].cells[1].textContent,
+            telefone: document.getElementById('dadosCliente').rows[1].cells[2].textContent,
+            bairro: document.getElementById('dadosCliente').rows[1].cells[3].textContent,
+            rua: document.getElementById('dadosCliente').rows[1].cells[4].textContent,
+            numero: document.getElementById('dadosCliente').rows[1].cells[5].textContent
+        };
+
+        const pedidos = [...document.querySelectorAll('#tabelaPedidos tbody tr')].map(row => {
+            const columns = row.querySelectorAll('td');
+            return {
+                idPedido: columns[0].textContent,
+                nomeCliente: columns[1].textContent,
+                produtosPedido: columns[2].textContent,
+                valorTotal: columns[3].textContent,
+                dataPedido: columns[4].textContent,
+                horaPedido: columns[5].textContent
+            };
+        });
+
+        try {
+            const token = document.cookie.split('; ').find(row => row.startsWith('token')).split('=')[1];
+            // Adicionar os dados do cliente ao corpo da requisição
+            const response = await fetch('http://localhost:3000/gerar-pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-acess-token': token
+                },
+                body: JSON.stringify({ pedidos, dadosCliente, datasRelatorio }) // Adicionando os dados do cliente
+            });
+
+            if (response.ok) {
+                alert('Relatório gerado com sucesso!')
+                const pdfBlob = await response.blob();
+                const pdfUrl = URL.createObjectURL(pdfBlob);
+                window.open(pdfUrl, '_blank');
+                location.reload();
+            } else {
+                alert('Erro ao gerar o relatório!');
+            }
+        } catch (error) {
+            console.error('Erro ao gerar o PDF:', error);
+        }
+
+        // Limpar os campos de entrada do formulário
+        document.getElementById('filtroNome').value = '';
+        document.getElementById('dataInicial').value = '';
+        document.getElementById('dataFinal').value = '';
+
+        // Limpar os dados do cliente na tabela
+        const dadosClienteRow = document.getElementById('dadosCliente').rows[1];
+        dadosClienteRow.cells[0].textContent = '';
+        dadosClienteRow.cells[1].textContent = '';
+        dadosClienteRow.cells[2].textContent = '';
+        dadosClienteRow.cells[3].textContent = '';
+        dadosClienteRow.cells[4].textContent = '';
+        dadosClienteRow.cells[5].textContent = '';
+
+        // Limpar os pedidos na tabela
+        const tabelaPedidosBody = document.getElementById('tabelaPedidos').querySelector('tbody');
+        tabelaPedidosBody.innerHTML = '';
+    });
+
+    </script>
+    
+    <script> //SCRIPT PARA EXCLUIR UM PEDIDO BASEADO NO ID
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const botaoExcluirPedido = document.getElementById('botaoExcluirPedido');
+
+        botaoExcluirPedido.addEventListener('click', async (event) => {
+            event.preventDefault();
+
+            const idPedido = document.getElementById('excluirPedido').value;
+
+            try {
+                const token = document.cookie.split('; ').find(row => row.startsWith('token')).split('=')[1];
+                const response = await fetch(`http://localhost:3000/pedidos/${idPedido}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'x-acess-token': token
+                    }
+                });
+
+                if (response.ok) {
+                    console.log('Pedido excluído com sucesso!');
+                    // Limpar o input de excluir por ID
+                    document.getElementById('formExcluirPedido').reset();
+                    // Atualizar a lista de pedidos após a exclusão
+                    obterPedidos();
+                } else {
+                    console.error('Erro ao excluir o pedido.');
+                }
+            } catch (error) {
+                console.error('Erro ao excluir o pedido:', error);
+            }
+        });
+    });
+
+    </script>
+
+    <script> // SCRIPT QUE EXIBE TODOS OS PEDIDOS REGISTRADOS EM UMA TABELA -- FUNCIONANDO
+
+    async function obterPedidos(){
+        try {
+            const token = document.cookie.split('; ').find(row => row.startsWith('token')).split('=')[1];
+            const response = await fetch('http://localhost:3000/historico-pedidos', {
+                headers: {
+                    'x-acess-token': token
+                }  
+            });
+            const pedidos = await response.json();
+            const tabelaBody = document.querySelector('#tabelaPedidos tbody');
+
+            // Limpa a tabela antes de preenchê-la
+            tabelaBody.innerHTML = '';
+
+            // Função para converter a data de ISO 8601 para DD/MM/AAAA
+            function converterData(dataISO8601) {
+                const data = new Date(dataISO8601);
+                const dia = data.getDate().toString().padStart(2, '0');
+                const mes = (data.getMonth() + 1).toString().padStart(2, '0');
+                const ano = data.getFullYear();
+                return `${dia}/${mes}/${ano}`;
+            }
+
+            // Atribuir a função de converter data para uma variável global
+            window.converterData = converterData;
+
+            // Preenche a tabela com os dados dos pedidos
+            pedidos.forEach(pedido => {
+                const row = document.createElement('tr');
+                const statusPedido = pedido.status_pedido === 0 ? 'Pendente' : 'Pago'; // Verifica o status do pedido
+                row.innerHTML = `
+                    <td>${pedido.id_pedido}</td>
+                    <td>${pedido.nome_cliente}</td>
+                    <td>${pedido.itens_pedido.replace(/\s\/\s/g, ' /<br>')}</td>
+                    <td>${pedido.valor_total}</td>
+                    <td>${converterData(pedido.data_pedido)}</td>
+                    <td>${pedido.hora_pedido}</td>
+                    <td>${statusPedido}</td>
+                    <td><input type="checkbox"></td>`;
+                    
+                tabelaBody.appendChild(row);
+            });
+        } catch (error) {
+            console.error('Erro ao carregar os pedidos:', error);
+        }
+    }
+
+    window.addEventListener('load', obterPedidos);
+
+    </script>
+
+    <script> // SCRIPT DO SISTEMA DE BUSCA DE PEDIDOS DE UM CLIENTE -- FUNCIONANDO
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const filtroNome = document.getElementById('filtroNome');
+            const dataInicial = document.getElementById('dataInicial');
+            const dataFinal = document.getElementById('dataFinal');
+            const buscarBotao = document.getElementById('buscar');
+
+            buscarBotao.addEventListener('click', async () => {
+                event.preventDefault();
+                const nomeCliente = filtroNome.value.trim().toLowerCase();
+                const dataInicio = dataInicial.value;
+                const dataFim = dataFinal.value;
+
+                try {
+                    const token = document.cookie.split('; ').find(row => row.startsWith('token')).split('=')[1];
+                    const response = await fetch(`http://localhost:3000/historico-pedidos-busca?nomeCliente=${nomeCliente}&dataInicio=${dataInicio}&dataFim=${dataFim}`, {
+                        headers: {
+                            'x-acess-token': token
+                        }
+                    });
+                    const pedidos = await response.json();
+
+                    // Limpar a tabela antes de preencher
+                    limparTabela();
+
+                    // Preencher a tabela com os pedidos
+                    preencherTabelaPedidos(pedidos);
+                } catch (error) {
+                    console.error('Erro ao buscar os pedidos:', error);
+                }
+            });
+        });
+
+        function limparTabela() {
+            const tabelaBody = document.querySelector('#tabelaPedidos tbody');
+            tabelaBody.innerHTML = '';
+        }
+
+        function preencherTabelaPedidos(response) {
+        const tabelaPedidosBody = document.querySelector('#tabelaPedidos tbody');
+        const tabelaClienteBody = document.querySelector('#dadosCliente tbody');
+        const { pedidos, cliente } = response;
+
+        // Preencher tabela de pedidos
+        pedidos.forEach(pedido => {
+            const row = document.createElement('tr');
+            const statusPedido = pedido.status_pedido === 0 ? 'Pendente' : 'Pago'; // Verifica o status do pedido
+            row.innerHTML = `
+                <td>${pedido.id_pedido}</td>
+                <td>${pedido.nome_cliente}</td>
+                <td>${pedido.itens_pedido.replace(/\s\/\s/g, ' /<br>')}</td>
+                <td>${pedido.valor_total}</td>
+                <td>${converterData(pedido.data_pedido)}</td>
+                <td>${pedido.hora_pedido}</td>
+                <td>${statusPedido}</td>
+                <td><input type="checkbox"></td>
+            `;
+            tabelaPedidosBody.appendChild(row);
+        });
+
+        // Preencher tabela de dados do cliente (apenas uma vez)
+        const clienteRow = document.createElement('tr');
+        clienteRow.innerHTML = `
+            <td>${cliente.nome}</td>
+            <td>${cliente.cpf}</td>
+            <td>${cliente.telefone}</td>
+            <td>${cliente.bairro}</td>
+            <td>${cliente.rua}</td>
+            <td>${cliente.numero}</td>
+        `;
+        tabelaClienteBody.appendChild(clienteRow);
+    }
+    </script>
+
+    <script> // SCRIPT SUGESTÃO DO NOME DO CLIENTE
+
+    // Função para fazer requisição assíncrona ao backend e obter sugestões de clientes
+    async function obterSugestoesClientes(termo) {
+        const token = document.cookie.split('; ').find(row => row.startsWith('token')).split('=')[1];
+        const response = await fetch(`http://localhost:3000/clientes/sugestoes?termo=${termo}`, {
+            headers: {
+                'x-acess-token': token
+            }
+        });
+        const data = await response.json();
+        return data.sugestoes;
+    }
+
+    // Atualiza a lista de sugestões de clientes
+    async function atualizarSugestoesClientes() {
+        const termo = document.getElementById('filtroNome').value;
+
+         // Verifica se o termo de busca está vazio
+        if (termo === '') {
+            // Limpa a lista de sugestões
+            document.getElementById('sugestoesClientes').innerHTML = '';
+            return;
+        }
+
+        const sugestoes = await obterSugestoesClientes(termo);
+        const sugestoesClientesDiv = document.getElementById('sugestoesClientes');
+        sugestoesClientesDiv.innerHTML = '';
+
+        sugestoes.forEach(sugestao => {
+            const sugestaoElement = document.createElement('div');
+            sugestaoElement.textContent = sugestao;
+            sugestaoElement.addEventListener('click', () => {
+                document.getElementById('filtroNome').value = sugestao;
+
+                // Oculta as sugestões de clientes após selecionar uma sugestão
+                sugestoesClientesDiv.innerHTML = '';
+            });
+            sugestoesClientesDiv.appendChild(sugestaoElement);
+        });
+    }
+
+    document.getElementById('filtroNome').addEventListener('input', atualizarSugestoesClientes);
+
+    // Adicionar eventos de entrada para os campos de cliente
+    const clienteInput = document.getElementById('filtroNome');
+
+    clienteInput.addEventListener('input', async () => {
+        const termo = clienteInput.value;
+        const sugestoes = await obterSugestoesClientes(termo);
+        // Atualizar o conteúdo da div "sugestoesClientes" com as sugestões obtidas
+    });
+
+    </script>
+
+    <script> // SCRIPT PARA ALTERAR STATUS DO PEDIDO
+
+    function alterarStatusPedidos() {
+        const checkboxes = document.querySelectorAll('#tabelaPedidos input[type="checkbox"]');
+        const pedidosParaAlterar = [];
+
+        checkboxes.forEach((checkbox) => {
+            if (checkbox.checked) {
+                // O checkbox está marcado
+                // Vamos encontrar o ID do pedido na mesma linha do checkbox
+                const row = checkbox.closest('tr');
+                const idPedidoElement = row.querySelector('td:first-child'); // Assume que o ID do pedido está na primeira célula da linha
+                if (idPedidoElement) {
+                    const idPedido = idPedidoElement.textContent.trim();
+                    pedidosParaAlterar.push(idPedido);
+                }
+            }
+        });
+
+        // Verifica se há pedidos para alterar
+        if (pedidosParaAlterar.length === 0) {
+            alert("Nenhum pedido selecionado para alteração.");
+            return;
+        }
+
+       // Confirmação do usuário
+        if (confirm("Deseja mesmo alterar o status dos pedidos selecionados?")) {
+            const token = document.cookie.split('; ').find(row => row.startsWith('token')).split('=')[1];
+            fetch('http://localhost:3000/alterar-status-pedidos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-acess-token': token
+                },
+                body: JSON.stringify({ pedidos: pedidosParaAlterar }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("Status dos pedidos alterado com sucesso!");
+                    // Atualiza a página após a confirmação
+                    location.reload();
+                } else {
+                    alert("Erro ao alterar o status dos pedidos.");
+                }
+            })
+            .catch(error => {
+                console.error("Erro ao fazer a requisição para o backend:", error);
+            });
+        }
+    }
+
+    // Adicione um evento de clique ao botão de alterar status
+    document.getElementById('alterarStatus').addEventListener('click', alterarStatusPedidos);
+
+    </script>
+
+    <script> // SCRIPT DO TOKEN
+
+    function verificarTokenCookie() {
+        const tokenCookie = document.cookie.split('; ').find(row => row.startsWith('token'));
+
+        if (!tokenCookie) {
+            window.location.href = '/index.html'; // Substitua 'index.html' pelo caminho correto da sua página de login
+        }
+    }
+
+    verificarTokenCookie(); // Chama a função imediatamente ao carregar a página
+
+    </script>
+
+</body>
+</html>

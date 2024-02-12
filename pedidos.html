@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="stylepedidos.css">
+    <title>Cadastrar Pedido</title>
+</head>
+<body>
+
+    <div class="navbar">
+        <a href="pedidos.html">Pedidos</a>
+        <a href="cadastros.html">Cadastros</a>
+        <a href="relatorios.html">Relatórios</a>
+    </div>
+    
+    <h1>Cadastrar Pedido</h1>
+    
+    <form id="formPedido">
+        <label for="cliente">Cliente:</label>
+        <input type="text" name="cliente" id="cliente" autocomplete="off" required>
+        <div id="sugestoesClientes"></div>
+        
+        <label for="produto">Produto:</label>
+        <input type="text" name="produto" id="produto" autocomplete="off" required>
+        <div id="sugestoesProdutos"></div>
+
+        <label for="valor">Valor / und:</label>
+        <input type="text" name="valor" id="valor" value="R$0.00" readonly>
+        
+        <label for="quantidade">Quantidade:</label>
+        <input type="number" name="quantidade" id="quantidade" min="1" required>
+        <button type="button" id="adicionar">Adicionar</button>
+
+        <table id="tabelaProdutos">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Valor</th>
+                    <th>Quant</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <label for="valorTotal">Valor Total:</label>
+        <input type="text" name="valorTotal" id="valorTotal" value="R$0.00" readonly>
+
+        <label for="dataHora">Data e Hora do Pedido:</label>
+        <input type="datetime-local" id="dataHora" value="" required>
+        
+        <button type="submit" id="botaoCadastrarPedido">Cadastrar Pedido</button>
+    </form>
+
+    <script> // SCRIPT QUE VAI EXTRAIR OS DADOS DO FORMULÁRIO E ENVIAR PARA O BACK-END
+
+                // Função para obter dados do cliente e data/hora
+        function obterDadosPedido() {
+            const nomeCliente = document.getElementById('cliente').value;
+            const dataHoraInput = document.getElementById('dataHora');
+            
+            // Obtendo a data e a hora do input datetime-local
+            const data = dataHoraInput.value.slice(0, 10); // Extrai os primeiros 10 caracteres para obter a data
+            const hora = dataHoraInput.value.slice(11, 16); // Extrai os caracteres 11 a 15 para obter a hora
+            
+            const tabelaProdutos = document.getElementById('tabelaProdutos');
+            const linhasProdutos = tabelaProdutos.getElementsByTagName('tr');
+            const produtos = [];
+
+            // Iterar sobre as linhas da tabela de produtos
+            for (let i = 1; i < linhasProdutos.length; i++) { // Começa em 1 para pular o cabeçalho da tabela
+                const nomeProduto = linhasProdutos[i].getElementsByTagName('td')[0].textContent;
+                const valorProdutoTexto = linhasProdutos[i].getElementsByTagName('td')[1].textContent;
+                const valorProduto = parseFloat(valorProdutoTexto.replace('R$', '').trim()) || 0;
+                const quantidade = parseInt(linhasProdutos[i].getElementsByTagName('td')[2].textContent);
+
+                produtos.push({ nomeProduto, valorProduto, quantidade });
+            }
+
+            return { nomeCliente, data, hora, produtos };
+        }
+
+        // Função para enviar os dados para o back-end
+        async function enviarDadosParaBackend() {
+            event.preventDefault();
+            const dadosPedido = obterDadosPedido();
+            
+            try {
+                const token = document.cookie.split('; ').find(row => row.startsWith('token')).split('=')[1];
+                const response = await fetch('http://localhost:3000/cadastrar-pedido', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-acess-token': token
+                    },
+                    body: JSON.stringify(dadosPedido)
+                });
+
+                if (response.ok) {
+                    alert('Pedido cadastrado com sucesso!');
+                    document.getElementById('formPedido').reset();
+                    const tabelaProdutos = document.getElementById('tabelaProdutos');
+                    const tbody = tabelaProdutos.querySelector('tbody');
+                    tbody.innerHTML = ''; // Remove todo o conteúdo do tbody
+                    valorTotal = 0;
+                    document.querySelector('#valorTotal').value = 'R$0.00'; // Atualiza o campo de valor total
+                } else {
+                    console.error('Erro ao cadastrar o pedido!');
+                }
+            } catch (error) {
+                console.error('Erro ao enviar os dados do pedido:', error);
+            }
+        }
+
+        // Adicione um evento de clique ao botão de cadastrar pedido
+        document.getElementById('botaoCadastrarPedido').addEventListener('click', enviarDadosParaBackend);
+
+    </script>
+
+    <script> // SCRIPT PARA MOSTRAR A DATA E A HORA ATUAL NA HORA DE SELECIONAR UMA DATA
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const dataHoraInput = document.querySelector('#dataHora');
+            const dataHoraAtualLocal = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+            const dataHoraAtualFormatada = dataHoraAtualLocal.slice(0, 16).replace(' ', 'T');
+            dataHoraInput.value = dataHoraAtualFormatada;
+        });
+
+    </script>
+
+    <script> // SCRIPT PARA CONSTRUIR A LISTA DE PRODUTOS ADICIONADOS AO PEDIDO
+        let valorTotal = 0; 
+        // Adiciona um evento de clique ao botão "Adicionar"
+        document.querySelector('#adicionar').addEventListener('click', function() {
+            // Captura os valores do produto e quantidade
+            const produto = document.querySelector('#produto').value;
+            const valorInput = document.querySelector('#valor').value;
+    
+    // Remove o prefixo 'R$' e quaisquer espaços em branco antes de tentar converter para número
+    const valorNumerico = parseFloat(valorInput.replace('R$', '').trim()) || 0;
+
+    const quantidade = parseInt(document.querySelector('#quantidade').value);
+
+    const subtotal = valorNumerico * quantidade;
+    valorTotal += subtotal;
+
+            // Atualiza o campo de entrada 'valorTotal' com o novo valor total
+            document.querySelector('#valorTotal').value = `R$${valorTotal.toFixed(2)}`; // Fixa o valor com 2 casas decimais
+
+            // Chama a função para construir o elemento HTML do produto
+            const novaLinha = criarLinhaTabela(produto, valorNumerico, quantidade);
+
+            // Adiciona o novo produto à div de produtos
+            document.querySelector('#tabelaProdutos tbody').appendChild(novaLinha);
+
+             // Limpa os campos do produto e quantidade
+            document.querySelector('#produto').value = '';
+            document.querySelector('#valor').value = 'R$0.00';
+            document.querySelector('#quantidade').value = '';
+
+            atualizarSugestoesProdutos();
+        });
+
+        // Função para construir o elemento HTML do produto
+        function criarLinhaTabela(produto, valorNumerico, quantidade) {
+            const novaLinha = document.createElement('tr');
+            const colunaProduto = document.createElement('td');
+            const colunaValor = document.createElement('td');
+            const colunaQuantidade = document.createElement('td');
+            const valorFormatado = `R$${valorNumerico.toFixed(2)}`;
+            colunaProduto.textContent = produto;
+            colunaValor.textContent = valorFormatado;
+            colunaQuantidade.textContent = `${quantidade} und`;
+            novaLinha.appendChild(colunaProduto);
+            novaLinha.appendChild(colunaValor);
+            novaLinha.appendChild(colunaQuantidade);
+            return novaLinha;
+        }
+
+        // Função para calcular o valor total somando todos os subtotais dos produtos na tabela
+        function calcularValorTotal() {
+            let valorTotal = 0;
+            const linhas = document.querySelectorAll('#tabelaProdutos tbody tr');
+            linhas.forEach((linha) => {
+                const valorTexto = linha.querySelector('td:nth-child(2)').textContent;
+                const valorNumerico = parseFloat(valorTexto.replace('R$', '').trim()) || 0;
+                const quantidadeTexto = linha.querySelector('td:nth-child(3)').textContent;
+                const quantidade = parseInt(quantidadeTexto.split(' ')[0]);
+                valorTotal += valorNumerico * quantidade;
+            });
+            return valorTotal.toFixed(2);
+        }
+
+    </script>
+    
+    <script> // SCRIPT DA SUGESTÃO DE PRODUTOS COM NOME E PREÇO NO INPUT
+
+       // Função para fazer requisição assíncrona ao backend e obter sugestões de produtos
+    async function obterSugestoesProdutos(termo) {
+        const token = document.cookie.split('; ').find(row => row.startsWith('token')).split('=')[1];
+        const response = await fetch(`http://localhost:3000/produtos/sugestoes?termo=${termo}`, {
+            headers: {
+                'x-acess-token': token
+            }
+        });
+        const data = await response.json();
+        return data.sugestoes;
+    }
+
+    // Atualiza a lista de sugestões de produtos
+    async function atualizarSugestoesProdutos() {
+        const termo = document.getElementById('produto').value;
+        const produtoInput = document.getElementById('produto');
+        const valorInput = document.getElementById('valor');
+        const sugestoesProdutosDiv = document.getElementById('sugestoesProdutos');
+
+        // Limpa as sugestões de produtos se o campo de input estiver vazio
+        if (termo === '') {
+            sugestoesProdutosDiv.innerHTML = '';
+            valorInput.value = 'R$0.00';
+            return; // Retorna para evitar a execução adicional do código
+        }
+
+        const sugestoes = await obterSugestoesProdutos(termo);
+
+        sugestoesProdutosDiv.innerHTML = '';
+
+        sugestoes.forEach(sugestao => {
+            const sugestaoElement = document.createElement('div');
+            sugestaoElement.textContent = `${sugestao.nome_produto} - R$${sugestao.preco_produto.toFixed(2)}`;
+            sugestaoElement.addEventListener('click', () => {
+                produtoInput.value = sugestao.nome_produto;
+                valorInput.value = `R$${sugestao.preco_produto.toFixed(2)}`;
+
+                // Oculta as sugestões de produtos após selecionar uma sugestão
+                sugestoesProdutosDiv.innerHTML = '';
+            });
+            
+            sugestaoElement.classList.add('sugestao-produto'); // Adiciona a classe para estilização
+
+            sugestoesProdutosDiv.appendChild(sugestaoElement);
+        });
+    }
+
+    document.getElementById('produto').addEventListener('input', atualizarSugestoesProdutos);
+
+    // Adicionar eventos de entrada para os campos de produto
+    const produtoInput = document.getElementById('produto');
+
+    produtoInput.addEventListener('input', async () => {
+        await atualizarSugestoesProdutos();
+    });
+    </script>
+
+    <script> // SCRIPT PARA OBTER SUGESTÃO DE CLIENTES NO INPUT
+
+    // Função para fazer requisição assíncrona ao backend e obter sugestões de clientes
+    async function obterSugestoesClientes(termo) {
+        const token = document.cookie.split('; ').find(row => row.startsWith('token')).split('=')[1];
+        const response = await fetch(`http://localhost:3000/clientes/sugestoes?termo=${termo}`, {
+            headers: {
+                'x-acess-token': token
+            }
+        });
+        const data = await response.json();
+        return data.sugestoes;
+    }
+
+    // Atualiza a lista de sugestões de clientes
+    async function atualizarSugestoesClientes() {
+        const termo = document.getElementById('cliente').value;
+
+        // Verifica se o termo de busca está vazio
+        if (termo === '') {
+            // Se estiver vazio, limpa o conteúdo da div 'sugestoesClientes' e sai da função
+            document.getElementById('sugestoesClientes').innerHTML = '';
+            return;
+        }
+
+        const sugestoes = await obterSugestoesClientes(termo);
+        const sugestoesClientesDiv = document.getElementById('sugestoesClientes');
+        sugestoesClientesDiv.innerHTML = '';
+
+        sugestoes.forEach(sugestao => {
+            const sugestaoElement = document.createElement('div');
+            sugestaoElement.textContent = sugestao;
+            sugestaoElement.addEventListener('click', () => {
+                document.getElementById('cliente').value = sugestao;
+
+                // Oculta as sugestões de clientes após selecionar uma sugestão
+                sugestoesClientesDiv.innerHTML = '';
+            });
+            sugestoesClientesDiv.appendChild(sugestaoElement);
+        });
+    }
+
+    document.getElementById('cliente').addEventListener('input', atualizarSugestoesClientes);
+
+    // Adicionar eventos de entrada para os campos de cliente
+    const clienteInput = document.getElementById('cliente');
+
+    clienteInput.addEventListener('input', async () => {
+        const termo = clienteInput.value;
+        const sugestoes = await obterSugestoesClientes(termo);
+        // Atualizar o conteúdo da div "sugestoesClientes" com as sugestões obtidas
+    });
+
+    </script>
+
+    <script> // SCRIPT DO TOKEN
+
+    function verificarTokenCookie() {
+        const tokenCookie = document.cookie.split('; ').find(row => row.startsWith('token'));
+
+        if (!tokenCookie) {
+            window.location.href = '/index.html'; // Substitua 'index.html' pelo caminho correto da sua página de login
+        }
+    }
+
+    verificarTokenCookie(); // Chama a função imediatamente ao carregar a página
+
+    </script>
+    
+</body>
+</html>
